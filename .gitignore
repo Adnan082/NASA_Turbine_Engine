@@ -1,0 +1,33 @@
+# Environment — never commit API keys
+.env
+
+# Large data files
+DATA/raw/
+DATA/processed/
+DATA/model_ready/
+
+# Trained models (too large for GitHub — use Git LFS or share via Drive)
+models/*.pt
+
+# Dashboard live output
+dashboard/live_results.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.eggs/
+dist/
+build/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# OS
+.DS_Store
+Thumbs.db
