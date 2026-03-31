@@ -8,8 +8,8 @@ sys.path.append(str(Path(__file__).parent / "event_bus"))
 sys.path.append(str(Path(__file__).parent / "pipeline"))
 sys.path.append(str(Path(__file__).parent / "Agents"))
 
-from bus import bus
-from orchestrator import Orchestrator
+from bus import bus  # noqa: E402
+from orchestrator import Orchestrator  # noqa: E402
 
 RESULTS_FILE = Path(__file__).parent / "dashboard" / "live_results.json"
 

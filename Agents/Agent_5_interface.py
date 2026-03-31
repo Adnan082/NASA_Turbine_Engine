@@ -126,8 +126,9 @@ Write a professional 3-paragraph report covering:
         # exact engine lookup
         matched = None
         for d in decisions:
-            eid_str = str(d.get("engine_id", d.get("engine_index", "")))
-            if re.search(rf"\b{re.escape(eid_str)}\b", user_message):
+            raw = d.get("engine_id", d.get("engine_index", ""))
+            eid_str = str(int(float(raw))) if raw != "" else ""
+            if eid_str and re.search(rf"\b{re.escape(eid_str)}\b", user_message):
                 matched = d
                 break
 
