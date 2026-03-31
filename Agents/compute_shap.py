@@ -10,13 +10,13 @@ import sys
 import numpy as np
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent / "Agents"))
+sys.path.append(str(Path(__file__).parent))
 
 from Agent_2_rul import RULAgent, FEATURE_NAMES
 
-MODEL_DIR       = Path(__file__).parent / "models"
-MODEL_READY_DIR = Path(__file__).parent / "DATA" / "model_ready"
-RESULTS_FILE    = Path(__file__).parent / "dashboard" / "live_results.json"
+MODEL_DIR       = Path(__file__).parent.parent / "models"
+MODEL_READY_DIR = Path(__file__).parent.parent / "DATA" / "model_ready"
+RESULTS_FILE    = Path(__file__).parent.parent / "dashboard" / "live_results.json"
 
 
 def main():

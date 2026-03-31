@@ -476,8 +476,15 @@ elif page == "Engine Detail":
         color_map = {"CRITICAL": "#ff2244", "HIGH": "#ff6600", "MEDIUM": "#ffaa00", "LOW": "#00aaff", "NONE": "#00ff88"}
         eng_color = color_map.get(priority, "#00d4ff")
 
+        rul_ci = engine.get("rul_ci")
+        rul_label = (
+            f"{engine['predicted_RUL']:.1f} ± {rul_ci:.0f} cycles"
+            if rul_ci is not None
+            else f"{engine['predicted_RUL']:.1f} cycles"
+        )
+
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric("PREDICTED RUL",  f"{engine['predicted_RUL']:.1f} cycles")
+        col1.metric("PREDICTED RUL",  rul_label)
         col2.metric("SEVERITY",       engine["severity"])
         col3.metric("PRIORITY",       engine["priority"])
         col4.metric("DECISION",       engine["decision"])
@@ -570,6 +577,22 @@ elif page == "RUL Analysis":
             st.plotly_chart(fig, use_container_width=True)
 
         fig = go.Figure()
+
+        if "rul_upper" in df.columns and "rul_lower" in df.columns:
+            fig.add_trace(go.Scatter(
+                y=df["rul_upper"].values,
+                name="Upper bound (90%)",
+                line=dict(color="rgba(0,212,255,0.2)", width=0),
+                showlegend=False
+            ))
+            fig.add_trace(go.Scatter(
+                y=df["rul_lower"].values,
+                name="90% Confidence Interval",
+                fill="tonexty",
+                fillcolor="rgba(0,212,255,0.07)",
+                line=dict(color="rgba(0,212,255,0.2)", width=0)
+            ))
+
         fig.add_trace(go.Scatter(
             y=df["predicted_RUL"].values,
             name="Predicted RUL",

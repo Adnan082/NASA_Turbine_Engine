@@ -6,6 +6,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent / "event_bus"))
 sys.path.append(str(Path(__file__).parent / "pipeline"))
+sys.path.append(str(Path(__file__).parent / "Agents"))
 
 from bus import bus
 from orchestrator import Orchestrator
@@ -109,6 +110,19 @@ async def main():
     for r in urgent[:10]:
         print(f"  Engine {r['engine_id']:3} | RUL: {r['predicted_RUL']:6.1f} | "
               f"Severity: {r['severity']:10} | Decision: {r['decision']}")
+
+    # ── Post-processing: SHAP + MAPIE ─────────────────────────
+    sys.path.append(str(Path(__file__).parent))
+    from Agents.mapie import main as run_mapie
+    from Agents.compute_shap import main as run_shap
+
+    print("\n" + "=" * 75)
+    print("Running MAPIE confidence intervals...")
+    run_mapie()
+
+    print("\n" + "=" * 75)
+    print("Running SHAP sensor importance (this takes a few minutes)...")
+    run_shap()
 
 
 if __name__ == "__main__":
