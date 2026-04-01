@@ -1,0 +1,21 @@
+# Data files (too large for Docker image)
+DATA/raw/
+DATA/processed/
+
+# Virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# MLflow runs
+mlruns/
+
+# Env file (use docker env_file instead)
+.env
+
+# Git
+.git/
+.gitignore
