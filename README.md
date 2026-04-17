@@ -17,7 +17,7 @@
 
 | Fleet Overview | Engine Detail |
 |---|---|
-| ![Fleet](screenshots/Fleet_overview.png) | ![Engine](screenshots/Individual_Engine_diagnostic.png) |
+| ![Fleet](screenshots/Fleet_overview.png) | ![Engine](screenshots/Individual_Engine_diagnostics.png) |
 
 | RUL Analysis | AI Chat |
 |---|---|
