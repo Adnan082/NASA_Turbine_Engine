@@ -13,6 +13,18 @@
 
 ---
 
+## Screenshots
+
+| Fleet Overview | Engine Detail |
+|---|---|
+| ![Fleet](screenshots/fleet_overview.png) | ![Engine](screenshots/engine_detail.png) |
+
+| RUL Analysis | AI Chat |
+|---|---|
+| ![RUL](screenshots/rul_analysis.png) | ![Chat](screenshots/ai_chat.png) |
+
+---
+
 ## Overview
 
 TurbineAgent monitors a fleet of 707 turbofan engines in real time, running four specialised AI agents in a streaming event-driven pipeline. Each engine passes through anomaly detection, RUL prediction, SHAP explanation, and a decision engine before a Claude LLM generates a natural language maintenance report. Results are visualised on a live Streamlit dashboard and exposed via a FastAPI REST API.
@@ -233,6 +245,18 @@ docker compose up
 
 - Dashboard: `http://localhost:8501`
 - API: `http://localhost:8000/docs`
+
+### Option 3 — Deploy to Render (free)
+
+1. Fork this repo
+2. Go to [render.com](https://render.com) → New Web Service
+3. Connect your forked repo
+4. Add environment variable: `ANTHROPIC_API_KEY=sk-ant-...`
+5. Set start command: `uvicorn api:app --host 0.0.0.0 --port 8000`
+6. Deploy → get a public URL for the REST API
+
+For the dashboard, create a second Render service with start command:
+`streamlit run dashboard/app.py --server.port 8501 --server.address 0.0.0.0`
 
 ---
 

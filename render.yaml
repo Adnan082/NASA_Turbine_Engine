@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: turbineagent-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+  - type: web
+    name: turbineagent-dashboard
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run dashboard/app.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0

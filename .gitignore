@@ -6,11 +6,10 @@ DATA/raw/
 DATA/processed/
 DATA/model_ready/
 
-# Trained models (too large for GitHub — use Git LFS or share via Drive)
-models/*.pt
+# models/*.pt — included in repo (2.7MB total, safe to commit)
 
-# Dashboard live output
-dashboard/live_results.json
+# Dashboard live output — included so results are visible on GitHub
+# dashboard/live_results.json
 
 # Python
 __pycache__/
