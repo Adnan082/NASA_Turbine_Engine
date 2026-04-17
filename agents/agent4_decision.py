@@ -4,8 +4,8 @@ import sys
 
 sys.path.append(str(Path(__file__).parent))
 
-from Agent_1_autoencoder import AnomalyAgent
-from Agent_2_rul import RULAgent
+from agent1_anomaly import AnomalyAgent
+from agent2_rul import RULAgent
 
 
 class DecisionAgent:

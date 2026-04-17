@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent / "event_bus"))
 sys.path.append(str(Path(__file__).parent / "pipeline"))
-sys.path.append(str(Path(__file__).parent / "Agents"))
+sys.path.append(str(Path(__file__).parent / "agents"))
 
 from bus import bus  # noqa: E402
 from orchestrator import Orchestrator  # noqa: E402
@@ -131,8 +131,8 @@ async def main():
 
     # ── Post-processing: SHAP + MAPIE ─────────────────────────
     sys.path.append(str(Path(__file__).parent))
-    from Agents.mapie import main as run_mapie
-    from Agents.compute_shap import main as run_shap
+    from agents.mapie import main as run_mapie
+    from agents.compute_shap import main as run_shap
 
     print("\n" + "=" * 75)
     print("Running MAPIE confidence intervals...")

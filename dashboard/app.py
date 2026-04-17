@@ -11,9 +11,9 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent.parent / ".env")
 
-sys.path.append(str(Path(__file__).parent.parent / "Agents"))
+sys.path.append(str(Path(__file__).parent.parent / "agents"))
 
-from Agent_5_interface import OrchestratorAgent
+from agent5_orchestrator import OrchestratorAgent
 
 # ── Page Config ───────────────────────────────────────────────
 st.set_page_config(

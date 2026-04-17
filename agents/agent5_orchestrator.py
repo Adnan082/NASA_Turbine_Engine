@@ -9,9 +9,9 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 
 sys.path.append(str(Path(__file__).parent))
 
-from Agent_1_autoencoder import AnomalyAgent
-from Agent_2_rul import RULAgent
-from Agent_4_descion import DecisionAgent
+from agent1_anomaly import AnomalyAgent
+from agent2_rul import RULAgent
+from agent4_decision import DecisionAgent
 
 
 class OrchestratorAgent:
@@ -123,7 +123,7 @@ Write a professional 3-paragraph report covering:
                             f"Severity={d.get('severity','N/A')}, Priority={d.get('priority','N/A')}, "
                             f"Action={d.get('action','N/A')}\n")
 
-        # exact engine lookup
+        # exact engine lookup — search all engines, not just urgent
         matched = None
         for d in decisions:
             raw = d.get("engine_id", d.get("engine_index", ""))
@@ -131,6 +131,15 @@ Write a professional 3-paragraph report covering:
             if eid_str and re.search(rf"\b{re.escape(eid_str)}\b", user_message):
                 matched = d
                 break
+
+        # fallback: also search by float string e.g. "5.0"
+        if matched is None:
+            for d in decisions:
+                raw = d.get("engine_id", d.get("engine_index", ""))
+                eid_float = str(float(raw)) if raw != "" else ""
+                if eid_float and re.search(rf"\b{re.escape(eid_float)}\b", user_message):
+                    matched = d
+                    break
 
         if matched:
             eid = matched.get("engine_id", matched.get("engine_index", "unknown"))

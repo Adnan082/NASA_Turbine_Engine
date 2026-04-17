@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent))
 
-from Agent_2_rul import RULAgent
+from agent2_rul import RULAgent
 
 MODEL_DIR       = Path(__file__).parent.parent / "models"
 MODEL_READY_DIR = Path(__file__).parent.parent / "DATA" / "model_ready"

@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent))
 
-from Agent_2_rul import RULAgent, FEATURE_NAMES
+from agent2_rul import RULAgent, FEATURE_NAMES
 
 MODEL_DIR       = Path(__file__).parent.parent / "models"
 MODEL_READY_DIR = Path(__file__).parent.parent / "DATA" / "model_ready"
@@ -63,7 +63,7 @@ def main():
     ranked_global = sorted(zip(feature_names, global_importance.tolist()), key=lambda x: x[1], reverse=True)
     print("\nGlobal sensor importance:")
     for name, score in ranked_global:
-        bar = "█" * int(score * 500)
+        bar = "#" * int(score * 50)
         print(f"  {name:10} {score:.5f}  {bar}")
 
 

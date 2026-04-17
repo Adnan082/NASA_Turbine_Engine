@@ -3,13 +3,13 @@ import numpy as np
 from pathlib import Path
 from langchain_core.tools import Tool
 
-sys.path.append(str(Path(__file__).parent.parent / "Agents"))
+sys.path.append(str(Path(__file__).parent.parent / "agents"))
 sys.path.append(str(Path(__file__).parent.parent / "event_bus"))
 
-from Agent_1_autoencoder import AnomalyAgent
-from Agent_2_rul import RULAgent
-from Agent_4_descion import DecisionAgent
-from Agent_5_interface import OrchestratorAgent
+from agent1_anomaly import AnomalyAgent
+from agent2_rul import RULAgent
+from agent4_decision import DecisionAgent
+from agent5_orchestrator import OrchestratorAgent
 from bus import bus
 from events import AnomalyEvent, RULEvent, DecisionEvent, ReportEvent
 

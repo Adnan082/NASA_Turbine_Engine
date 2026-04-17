@@ -18,9 +18,9 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent / ".env")
-sys.path.append(str(Path(__file__).parent / "Agents"))
+sys.path.append(str(Path(__file__).parent / "agents"))
 
-from Agent_5_interface import OrchestratorAgent
+from agent5_orchestrator import OrchestratorAgent
 
 RESULTS_FILE = Path(__file__).parent / "dashboard" / "live_results.json"
 

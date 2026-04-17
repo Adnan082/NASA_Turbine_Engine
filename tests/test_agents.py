@@ -4,9 +4,9 @@ import pytest
 import numpy as np
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent.parent / "Agents"))
+sys.path.append(str(Path(__file__).parent.parent / "agents"))
 
-from Agent_4_descion import DecisionAgent
+from agent4_decision import DecisionAgent
 
 
 def test_decision_critical():
@@ -29,7 +29,7 @@ def test_decision_healthy():
 
 def test_rul_prediction_range():
     """All RUL predictions should be between 0 and 125 cycles."""
-    from Agent_2_rul import RULAgent
+    from agent2_rul import RULAgent
 
     MODEL_DIR       = Path(__file__).parent.parent / "models"
     MODEL_READY_DIR = Path(__file__).parent.parent / "DATA" / "model_ready"
