@@ -17,11 +17,11 @@
 
 | Fleet Overview | Engine Detail |
 |---|---|
-| ![Fleet](screenshots/fleet_overview.png) | ![Engine](screenshots/engine_detail.png) |
+| ![Fleet](screenshots/Fleet_overview.png) | ![Engine](screenshots/Individual_Engine_diagnostic.png) |
 
 | RUL Analysis | AI Chat |
 |---|---|
-| ![RUL](screenshots/rul_analysis.png) | ![Chat](screenshots/ai_chat.png) |
+| ![RUL](screenshots/RUL_Prediction.png) | ![Chat](screenshots/AI_Chat.png) |
 
 ---
 
@@ -316,9 +316,7 @@ Interactive docs: `http://localhost:8000/docs`
 - [x] FastAPI REST API (4 endpoints)
 - [x] Docker containerisation
 - [x] pytest unit tests
-- [ ] Agent 3 — XGBoost emissions predictor (UCI Gas Turbine dataset)
-- [ ] Cloud deployment (AWS / GCP)
-- [ ] CI/CD pipeline (GitHub Actions)
+  
 
 ---
 
