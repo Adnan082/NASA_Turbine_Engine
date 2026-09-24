@@ -223,7 +223,10 @@ Download NASA C-MAPSS from the [NASA Prognostics Data Repository](https://www.na
 
 ### Docker
 
+`docker-compose.yml` requires a `.env` file (both services load it via `env_file`). Copy the example first:
+
 ```bash
+cp .env.example .env   # then fill in ANTHROPIC_API_KEY
 docker compose up
 ```
 
