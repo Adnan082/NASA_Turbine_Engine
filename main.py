@@ -77,6 +77,12 @@ async def simulate_stream(X_test: np.ndarray, cond_test: np.ndarray, delay: floa
 async def main():
     MODEL_READY_DIR = Path(__file__).parent / "DATA" / "model_ready"
 
+    if not (MODEL_READY_DIR / "X_test.npy").exists():
+        raise FileNotFoundError(
+            f"{MODEL_READY_DIR} is missing or empty. "
+            "Run `python scripts/prepare_data.py` first."
+        )
+
     # load test data
     print("Loading test data...")
     X_test    = np.load(MODEL_READY_DIR / "X_test.npy").astype("float32")
