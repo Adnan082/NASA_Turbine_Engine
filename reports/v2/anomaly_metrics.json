@@ -1,0 +1,46 @@
+{
+  "target_false_alarm_rate": 0.05,
+  "achieved_false_alarm_rate_on_calibration_windows": 0.05171319796954315,
+  "n_calibration_windows": 3152,
+  "thresholds_by_regime": {
+    "FD001_r0": 0.013042895123362541,
+    "FD002_r0": 0.019658248871564865,
+    "FD002_r1": 0.01949308253824711,
+    "FD002_r2": 0.01951230689883232,
+    "FD002_r3": 0.01924235187470913,
+    "FD002_r4": 0.01936456188559532,
+    "FD002_r5": 0.019254358485341072,
+    "FD003_r0": 0.005757869221270084,
+    "FD004_r0": 0.007664832286536694,
+    "FD004_r1": 0.007770511321723461,
+    "FD004_r2": 0.007577171083539724,
+    "FD004_r3": 0.007596826646476984,
+    "FD004_r4": 0.007584290578961372,
+    "FD004_r5": 0.007595556788146496
+  },
+  "test_flag_rate_by_rul_band": {
+    "<=30": {
+      "n": 159,
+      "flag_rate": 0.5660377358490566
+    },
+    "31-60": {
+      "n": 114,
+      "flag_rate": 0.24561403508771928
+    },
+    "61-100": {
+      "n": 177,
+      "flag_rate": 0.1016949152542373
+    },
+    ">100": {
+      "n": 257,
+      "flag_rate": 0.054474708171206226
+    }
+  },
+  "rul_le_30_precision": 0.6,
+  "rul_le_30_recall": 0.5660377358490566,
+  "n_test_engines": 707,
+  "n_flagged": 150,
+  "v1_comparison": {
+    "note": "v1 flagged 39.6% of RUL<=30 engines and 19.5% of RUL>=100 engines (75th-percentile in-sample threshold, all-life training) \u2014 see README Known limitations."
+  }
+}

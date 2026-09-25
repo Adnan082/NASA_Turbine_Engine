@@ -336,16 +336,16 @@ committed scripts (`scripts/evaluate_rul.py`, `scripts/evaluate_v2.py`) — see 
 - **Not reproducible from a clone.** The notebooks used Colab/Google Drive paths and `DATA/model_ready/`
   was gitignored with no way to rebuild it. `scripts/prepare_data.py` now rebuilds it from the committed
   parquet files, verified bit-for-bit identical to the original notebook output.
+- **Anomaly detector (Agent 1) was weak, and regime labels collided across sub-datasets.** v1 trains on
+  all 125,618 windows (not "healthy only", despite an earlier README claim) with a 75th-percentile
+  in-sample threshold that flags ~25% of healthy windows by construction, and its condition labels merge
+  four physically different regimes into "condition 0" (FD001 and FD003 are both hardcoded to 0). v2
+  trains on early-life windows only, gives every sub-dataset's regimes a unique label (`FD002_r3`), and
+  calibrates its threshold for a 5% false-alarm rate on held-out data — see
+  [v2: anomaly detector trained on early life](#v2-anomaly-detector-trained-on-early-life). **v1's
+  deployed agent is unchanged**; this is a documented alternative, not a swap.
 
 **Still open (v1 behaviour, unchanged in the current default agents):**
-- **Anomaly detector (Agent 1) is weak.** It's trained on all 125,618 training windows, not just healthy
-  ones, and its threshold (75th percentile of training reconstruction error, per condition) flags ~25% of
-  healthy windows by construction. In practice it flags 39.6% of engines with RUL ≤ 30 but also 19.5% of
-  engines with RUL ≥ 100 — it's a weak signal, not a reliable detector, and should be read that way on the
-  dashboard.
-- **Regime labels collide across sub-datasets.** KMeans regimes are fit separately on FD002 and FD004,
-  and FD001/FD003 are both hardcoded to "condition 0" — so the per-condition anomaly threshold for
-  "condition 0" is actually pooling four physically different operating regimes together.
 - **No validation set or early stopping for v1.** The Optuna search (15 trials, 10% subsample) minimised
   *training* loss with no held-out validation data, so the reported hyperparameters were picked without
   any check against overfitting. v2's retrain adds a validation split and early stopping for the RUL
@@ -421,6 +421,37 @@ marginal coverage falls *below* the 90% target and the already-weak 61–100 ban
 that band has only 29 calibration engines, so its quantile is a noisy estimate. We're reporting this as an
 experiment, not adopting it as the default: **the split-conformal ±27.8 cycles is the v2 headline number**,
 Mondrian is a documented alternative with a real trade-off, not a strict improvement.
+
+---
+
+## v2: anomaly detector trained on early life
+
+v1's autoencoder (Agent 1) is trained on all 125,618 training windows — not "healthy windows only" as an
+earlier README claimed — and its threshold (75th percentile of its own training error, per condition)
+flags ~25% of healthy windows by construction, on top of merging four different physical regimes into
+"condition 0" (see [Known limitations](#known-limitations)). v2 fixes both:
+
+- Trained only on **early-life windows** (the first 30% of each engine's life) from the same 510
+  fit-train engines used in the RUL retrain (`scripts/prepare_anomaly_v2_data.py`)
+- Regimes are unique across sub-datasets (`FD002_r3`, not just `3`) — 14 regimes instead of 6
+- Threshold picked per regime for a **5% false-alarm rate**, measured on held-out early-life windows from
+  the 142 calibration engines (achieved 5.2%), instead of an arbitrary 75th percentile on its own training
+  data
+
+Numbers from `scripts/evaluate_anomaly_v2.py`, saved to `reports/v2/anomaly_metrics.json`:
+
+| RUL band | v1 flag rate | v2 flag rate |
+|---|---|---|
+| ≤ 30 (near failure) | 39.6% | **56.6%** |
+| 31–60 | — | 24.6% |
+| 61–100 | — | 10.2% |
+| > 100 (healthy) | 19.5% | **5.4%** |
+
+v2 is a clear improvement in both directions: it catches *more* near-failure engines (56.6% vs 39.6%) while
+raising *far fewer* false alarms on healthy ones (5.4% vs 19.5%, close to the 5% target it was calibrated
+for). For "RUL ≤ 30", precision is 0.60 and recall is 0.57 (150/707 engines flagged overall, vs 190/707 for
+v1). v1's threshold and behaviour are unchanged in the deployed agent — this is a documented alternative,
+not a swap.
 
 ---
 
