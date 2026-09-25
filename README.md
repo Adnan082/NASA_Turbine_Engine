@@ -468,8 +468,10 @@ not a swap.
 - [x] MLflow experiment tracking
 - [x] FastAPI REST API (4 endpoints)
 - [x] Docker containerisation
-- [x] pytest unit tests
-  
+- [x] pytest unit tests + CI
+- [x] Reproducible pipeline from a clean clone (`scripts/prepare_data.py`)
+- [x] v2 — engine-level conformal calibration, coverage by RUL band
+- [x] v2 — anomaly detector trained on early life, 5% false-alarm threshold
 
 ---
 
