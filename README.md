@@ -40,6 +40,10 @@ TurbineAgent monitors a fleet of **707 turbofan engines** in real time across th
 | Engines flagged anomalous | **26.9%** (190 / 707) |
 | Fleet classified CRITICAL | **10 engines** |
 
+The numbers above are v1 (the deployed dashboard model). A corrected v2 calibration and retrain does
+better on point-prediction accuracy and interval width — see
+[v2: calibration on held-out training engines](#v2-calibration-on-held-out-training-engines).
+
 ---
 
 ## Architecture
@@ -346,6 +350,77 @@ committed scripts (`scripts/evaluate_rul.py`, `scripts/evaluate_v2.py`) — see 
   *training* loss with no held-out validation data, so the reported hyperparameters were picked without
   any check against overfitting. v2's retrain adds a validation split and early stopping for the RUL
   model; the v1 checkpoint itself hasn't been retrained.
+
+---
+
+## v2: calibration on held-out training engines
+
+v1's conformal calibration set was "the last 20% of `X_test`" — because of file order that's FD004 only,
+and it's part of the data used for final evaluation (see [Known limitations](#known-limitations)). v2
+fixes this properly: the CNN-BiLSTM is retrained (same v1 hyperparameters, no re-tuning) on 510 of the 709
+training engines, with a held-out validation slice for early stopping, and calibrated on the other 142
+training engines — one prediction per engine, at a random cut point in its life. The 707 test engines are
+evaluated exactly once, at the end, having never been touched by training or calibration. Every number
+below is written by `scripts/evaluate_v2.py` to `reports/v2/metrics.json`.
+
+Training stopped early at epoch 13 (patience 10, CPU-only) rather than running the full 100 epochs v1 used
+with no validation set at all.
+
+**Point prediction — v1 (all 709 engines, 100 epochs, no validation) vs v2 (510 engines, early-stopped):**
+
+| Sub-dataset | v1 RMSE | v2 RMSE | v1 MAE | v2 MAE | v1 NASA score | v2 NASA score |
+|---|---|---|---|---|---|---|
+| FD001 | 16.98 | **13.25** | 12.21 | **9.58** | 810 | **323** |
+| FD002 | 18.05 | **13.52** | 12.86 | **9.47** | 2126 | **1037** |
+| FD003 | **14.52** | 14.97 | **9.93** | 10.24 | **602** | 952 |
+| FD004 | 18.43 | **14.60** | 12.42 | **10.29** | 2841 | **1586** |
+| **Pooled** | 17.58 | **14.08** | 12.20 | **9.88** | — | — |
+
+v2 is better everywhere except FD003, where it's slightly worse on every metric, including a notably
+higher NASA score (952 vs 602) driven by a handful of late (over-)predictions that the asymmetric NASA
+score penalises heavily. Reported as-is, not smoothed over.
+
+**Conformal calibration:**
+
+| | v1 | v2 (split-conformal) |
+|---|---|---|
+| Calibration set | last 20% of test set (142 engines, FD004 only) | 142 held-out **training** engines, all 4 sub-datasets |
+| Interval | ± 33.3 cycles | **± 27.8 cycles** |
+| Evaluated on | 565 test engines (the rest weren't calibration data) | **all 707** test engines |
+| Coverage (target 90%) | 92.9% | 92.8% |
+
+v2's interval is ~17% narrower at essentially the same marginal coverage — and unlike v1, it can honestly
+report coverage on the full test set, because calibration never touched it.
+
+**Coverage by true-RUL band (v2, split-conformal)** — v1 never measured this:
+
+| RUL band | n | Coverage | Mean width |
+|---|---|---|---|
+| 0–30 | 159 | 100.0% | 45.4 |
+| 31–60 | 114 | 93.9% | 55.1 |
+| 61–100 | 177 | **82.5%** | 49.6 |
+| >100 | 257 | 94.9% | 36.9 |
+
+Marginal coverage (92.8%) hides real unevenness: the 61–100 band is under the 90% target despite the
+pooled number looking fine. This is a real limitation of a single pooled quantile, not a bug — it's
+exactly why we checked band-level coverage instead of stopping at the marginal number.
+
+**Mondrian (group-conditional) conformal, by predicted-RUL band** — tried per Phase 3's "if time allows":
+quantiles are computed separately per band of the model's own prediction, using each band's own
+calibration engines.
+
+| | Split-conformal | Mondrian |
+|---|---|---|
+| Marginal coverage | 92.8% | 89.1% |
+| Mean width | 44.9 | **36.2** |
+| RUL 61–100 coverage | 82.5% | 72.9% (worse) |
+| RUL 0–30 coverage / width | 100.0% / 45.4 | 96.2% / **22.5** |
+
+Mondrian gives a much tighter interval for engines the model thinks are near end-of-life, but its overall
+marginal coverage falls *below* the 90% target and the already-weak 61–100 band gets worse, not better —
+that band has only 29 calibration engines, so its quantile is a noisy estimate. We're reporting this as an
+experiment, not adopting it as the default: **the split-conformal ±27.8 cycles is the v2 headline number**,
+Mondrian is a documented alternative with a real trade-off, not a strict improvement.
 
 ---
 
