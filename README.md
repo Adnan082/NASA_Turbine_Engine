@@ -1,6 +1,6 @@
 # TurbineAgent — NASA C-MAPSS Fleet Health Monitor
 
-> A production-grade multi-agent AI system for predictive maintenance of aircraft turbofan engines.
+> A multi-agent AI system for predictive maintenance of aircraft turbofan engines.
 
 ![Python](https://img.shields.io/badge/Python-3.11%2B-blue?style=flat-square&logo=python)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.2%2B-orange?style=flat-square&logo=pytorch)
@@ -27,7 +27,7 @@
 
 ## Overview
 
-TurbineAgent monitors a fleet of **707 turbofan engines** in real time across 4 NASA C-MAPSS fault scenarios. Four specialised AI agents run in a streaming asyncio pipeline — detecting anomalies, predicting failure timelines, explaining sensor degradation with SHAP, and generating natural language maintenance reports via Claude Haiku. Results are visualised on a live Streamlit dashboard and exposed via a FastAPI REST API.
+TurbineAgent monitors a fleet of **707 turbofan engines** in real time across the 4 NASA C-MAPSS sub-datasets (FD001–FD004, spanning 6 operating conditions and 2 fault modes between them). Four specialised AI agents run in a streaming asyncio pipeline — detecting anomalies, predicting failure timelines, explaining sensor degradation with SHAP, and generating natural language maintenance reports via Claude Haiku. Results are visualised on a live Streamlit dashboard and exposed via a FastAPI REST API.
 
 ### Key Results
 
@@ -35,7 +35,7 @@ TurbineAgent monitors a fleet of **707 turbofan engines** in real time across 4 
 |---|---|
 | RUL prediction MAE | **12.2 cycles** (CNN-BiLSTM) |
 | RUL prediction RMSE | **17.6 cycles** |
-| Conformal prediction interval | **± 33.3 cycles** at 90% coverage |
+| Conformal prediction interval | **± 33.3 cycles** (90% target, 92.9% observed — see [Known limitations](#known-limitations)) |
 | Near-failure capture rate | **39.6%** |
 | Engines flagged anomalous | **26.9%** (190 / 707) |
 | Fleet classified CRITICAL | **10 engines** |
@@ -84,33 +84,25 @@ Dashboard  REST API
 
 ---
 
-## How It Compares to Published Models
+## Feature Comparison
 
-Most published work tests only on FD001 (1 condition, 1 fault mode). TurbineAgent tests on all 4 sub-datasets — a significantly harder and more realistic benchmark.
+A lot of published C-MAPSS work reports results on FD001 only (1 operating condition, 1 fault mode) rather than
+all four sub-datasets. This project evaluates on all 707 test engines across FD001–FD004. We haven't
+independently reproduced the published baselines below, so this table compares *scope*, not accuracy —
+see [Reproduce](#reproduce) and `reports/v1/metrics.json` for our own MAE/RMSE/NASA-score numbers instead
+of a cross-paper comparison, which is easy to get wrong by comparing mismatched metrics (e.g. MAE vs RMSE).
 
-### RUL Prediction MAE
-
-| Method | FD001 |
-|---|---|
-| Vanilla LSTM | 16.14 |
-| CNN | 18.45 |
-| BiLSTM | 15.20 |
-| Transformer | 13.90 |
-| **TurbineAgent CNN-BiLSTM** | **12.20** |
-
-### Feature Comparison
-
-| Feature | Published Papers | TurbineAgent |
+| Feature | Typical FD001-only baseline | TurbineAgent |
 |---|---|---|
 | Datasets tested | FD001 only | FD001 + FD002 + FD003 + FD004 |
-| Operating conditions | 1 | 6 (KMeans clustered) |
-| Fault modes | 1 | 2 |
+| Operating conditions | 1 | 1 (FD001/FD003) or 6, KMeans-clustered (FD002/FD004) |
+| Fault modes | 1 | 1 (FD001/FD002) or 2 (FD003/FD004) |
 | Explainability | None | SHAP GradientExplainer per engine |
-| Uncertainty | None | Conformal prediction (±33 cycles, 90%) |
+| Uncertainty | None | Conformal prediction (±33 cycles, ~93% empirical coverage — see [Known limitations](#known-limitations)) |
 | Deployment | Script | FastAPI + Docker + Streamlit |
 | LLM integration | None | Claude Haiku — reports + interactive chat |
 | Experiment tracking | None | MLflow |
-| Testing | None | pytest unit tests |
+| Testing | None | pytest unit tests + CI |
 
 ---
 
@@ -311,7 +303,8 @@ Interactive docs: `http://localhost:8000/docs`
 
 **Agent 1 — LSTM Autoencoder**
 - Architecture: LSTM encoder-decoder · hidden=64 · layers=1 · dropout=0.40
-- Trained on healthy windows only (first 30% of each engine's life)
+- v1 is trained on **all** training windows (125,618 of them), not just healthy ones — see
+  [Known limitations](#known-limitations) for what that costs in false positives
 - Threshold: 75th percentile of reconstruction error per operating condition
 - Tuned with Optuna (15 trials)
 
@@ -321,6 +314,38 @@ Interactive docs: `http://localhost:8000/docs`
 - SHAP GradientExplainer — top 3 sensors per engine
 - Conformal prediction — 90% coverage intervals, split conformal (no external library)
 - Tuned with Optuna (15 trials)
+
+---
+
+## Known limitations
+
+Numbers here are traceable to `reports/v1/metrics.json` and `reports/v2/metrics.json`, both written by
+committed scripts (`scripts/evaluate_rul.py`, `scripts/evaluate_v2.py`) — see [Reproduce](#reproduce).
+
+**Fixed for v2:**
+- **Conformal calibration set was test data.** v1 calibrated on "the last 20% of `X_test`"
+  (`agents/mapie.py`) — because of file concatenation order this slice is FD004 only, and it's part of
+  the set used for final evaluation, so the design wasn't exchangeable even though observed coverage
+  (92.9%) happened to be fine. v2 calibrates on a held-out 20% of the *training* engines instead
+  (`scripts/prepare_calibration_split.py`), never touching the test set until evaluation. See the
+  [v2: calibration on held-out training engines](#v2-calibration-on-held-out-training-engines) section.
+- **Not reproducible from a clone.** The notebooks used Colab/Google Drive paths and `DATA/model_ready/`
+  was gitignored with no way to rebuild it. `scripts/prepare_data.py` now rebuilds it from the committed
+  parquet files, verified bit-for-bit identical to the original notebook output.
+
+**Still open (v1 behaviour, unchanged in the current default agents):**
+- **Anomaly detector (Agent 1) is weak.** It's trained on all 125,618 training windows, not just healthy
+  ones, and its threshold (75th percentile of training reconstruction error, per condition) flags ~25% of
+  healthy windows by construction. In practice it flags 39.6% of engines with RUL ≤ 30 but also 19.5% of
+  engines with RUL ≥ 100 — it's a weak signal, not a reliable detector, and should be read that way on the
+  dashboard.
+- **Regime labels collide across sub-datasets.** KMeans regimes are fit separately on FD002 and FD004,
+  and FD001/FD003 are both hardcoded to "condition 0" — so the per-condition anomaly threshold for
+  "condition 0" is actually pooling four physically different operating regimes together.
+- **No validation set or early stopping for v1.** The Optuna search (15 trials, 10% subsample) minimised
+  *training* loss with no held-out validation data, so the reported hyperparameters were picked without
+  any check against overfitting. v2's retrain adds a validation split and early stopping for the RUL
+  model; the v1 checkpoint itself hasn't been retrained.
 
 ---
 

@@ -81,7 +81,11 @@ class AnomalyAgent:
         results = []
 
         for i in range(len(X)):
-            condition = float(conditions[i])
+            # v1 keys thresholds by a numeric condition; v2 keys them by a
+            # regime string unique across sub-datasets (e.g. "FD004_r3") to
+            # avoid collapsing four different regimes into "condition 0" —
+            # so this must accept whatever type `conditions` carries.
+            condition = conditions[i]
             threshold = self.thresholds.get(condition, list(self.thresholds.values())[0])
             status    = self.get_status(errors[i], threshold)
 
