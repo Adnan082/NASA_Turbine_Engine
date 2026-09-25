@@ -24,6 +24,12 @@ def main():
         print("No live_results.json found. Run main.py first.")
         return
 
+    if not (MODEL_READY_DIR / "X_test.npy").exists():
+        raise FileNotFoundError(
+            f"{MODEL_READY_DIR} is missing or empty. "
+            "Run `python scripts/prepare_data.py` first."
+        )
+
     print("Loading data and model...")
     X_test = np.load(MODEL_READY_DIR / "X_test.npy").astype("float32")
     y_test = np.load(MODEL_READY_DIR / "y_test.npy").astype("float32")

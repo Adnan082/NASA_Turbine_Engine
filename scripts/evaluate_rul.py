@@ -59,13 +59,9 @@ def subset_slices():
     return slices
 
 
-def main():
-    require_model_ready()
-
-    X_test = np.load(MODEL_READY_DIR / "X_test.npy").astype("float32")
-    y_test = np.load(MODEL_READY_DIR / "y_test.npy").astype("float32")
-
-    agent = RULAgent(model_path=MODEL_DIR / "agent2_rul_predictor.pt")
+def compute_metrics(X_test, y_test, agent):
+    """Pure computation, shared by main() and the pytest regression test —
+    one code path for the numbers everyone relies on."""
     results = agent.predict(X_test)
     preds = np.array([r["predicted_RUL"] for r in results], dtype="float32")
 
@@ -114,7 +110,7 @@ def main():
             "coverage": float(covered[lo:hi].mean()),
         }
 
-    metrics = {
+    return {
         "pooled": {"mae": mae, "rmse": rmse, "n": len(y_test)},
         "per_subset": per_subset,
         "conformal": {
@@ -127,19 +123,37 @@ def main():
         },
     }
 
+
+def main():
+    require_model_ready()
+
+    X_test = np.load(MODEL_READY_DIR / "X_test.npy").astype("float32")
+    y_test = np.load(MODEL_READY_DIR / "y_test.npy").astype("float32")
+
+    agent = RULAgent(model_path=MODEL_DIR / "agent2_rul_predictor.pt")
+    metrics = compute_metrics(X_test, y_test, agent)
+
+    mae = metrics["pooled"]["mae"]
+    rmse = metrics["pooled"]["rmse"]
+    per_subset = metrics["per_subset"]
+    quantile = metrics["conformal"]["quantile"]
+    coverage = metrics["conformal"]["coverage_application"]
+    coverage_by_subset = metrics["conformal"]["coverage_by_subset"]
+    alpha = metrics["conformal"]["alpha"]
+
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     with open(REPORTS_DIR / "metrics.json", "w") as f:
         json.dump(metrics, f, indent=2)
 
-    print(f"Pooled  — MAE {mae:.2f}  RMSE {rmse:.2f}  (n={len(y_test)})")
+    print(f"Pooled  — MAE {mae:.2f}  RMSE {rmse:.2f}  (n={metrics['pooled']['n']})")
     for name in SUBSETS:
         m = per_subset[name]
         print(f"{name:6} — RMSE {m['rmse']:.2f}  MAE {m['mae']:.2f}  "
               f"NASA score {m['nasa_score']:.0f}  (n={m['n']})")
 
-    print(f"\nConformal — alpha={alpha}, calibration n={len(y_cal)} "
+    print(f"\nConformal — alpha={alpha}, calibration n={metrics['conformal']['calibration_n']} "
           f"(last 20% of X_test), quantile=±{quantile:.1f}")
-    print(f"Coverage on {len(y_app)} non-calibration engines: {coverage * 100:.1f}%")
+    print(f"Coverage on {metrics['conformal']['application_n']} non-calibration engines: {coverage * 100:.1f}%")
     for name in SUBSETS:
         c = coverage_by_subset[name]
         if c is None:

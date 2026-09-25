@@ -242,6 +242,25 @@ docker compose up
 
 ---
 
+## Reproduce
+
+The v1 model checkpoints (`models/agent1_autoencoder.pt`, `models/agent2_rul_predictor.pt`) are
+committed, but `DATA/model_ready/*.npy` is gitignored — a fresh clone can't run anything until
+it's rebuilt from the committed parquet files in `DATA/pre_processed_data/`.
+
+```bash
+pip install -r requirements.txt
+python scripts/prepare_data.py     # rebuild DATA/model_ready/*.npy (make prepare)
+python scripts/evaluate_rul.py     # reproduce MAE 12.20 / RMSE 17.58 / 92.9% coverage (make evaluate)
+python -m pytest tests/ -q         # data checks + metric regression tests (make test)
+```
+
+`scripts/prepare_data.py` is a script version of `notebooks/Pre-processing.ipynb` and is checked
+against the committed arrays with `np.allclose` in `tests/test_data.py`. See `FIX_REPORT.md` for
+what else changed to make this reproducible and where the numbers above come from.
+
+---
+
 ## Running
 
 ```bash
