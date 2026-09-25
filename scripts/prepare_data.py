@@ -167,28 +167,47 @@ def create_windows_test(df, sensor_cols, window_size=WINDOW_SIZE):
     return np.array(X), np.array(conditions), np.array(units)
 
 
-def main():
+def build_processed_frames(verbose=True):
+    """Runs every preprocessing step except windowing and returns the fully
+    processed (rolling-mean, conditioned, per-condition-scaled, RUL-labelled)
+    per-engine dataframes. Shared by scripts/prepare_data.py (v1 windows) and
+    scripts/prepare_calibration_split.py (v2 engine-level split), so both
+    windowing schemes are built from identical, non-duplicated preprocessing.
+    """
     require_pre_processed_data()
 
-    print("Loading pre-processed data...")
+    if verbose:
+        print("Loading pre-processed data...")
     train, test, rul = load_data()
 
-    print(f"Capping RUL at {MAX_RUL} (test labels)...")
+    if verbose:
+        print(f"Capping RUL at {MAX_RUL} (test labels)...")
     cap_test_rul(rul)
 
-    print(f"Applying {ROLLING_WINDOW}-cycle rolling mean to {NOISY_SENSOR}...")
+    if verbose:
+        print(f"Applying {ROLLING_WINDOW}-cycle rolling mean to {NOISY_SENSOR}...")
     smooth_noisy_sensor(train, test)
 
-    print("Assigning operating conditions (KMeans on FD002/FD004)...")
+    if verbose:
+        print("Assigning operating conditions (KMeans on FD002/FD004)...")
     assign_conditions(train, test)
-    for ds in DATASETS:
-        print(f"  {ds} — conditions: {sorted(train[ds]['condition'].unique())}")
+    if verbose:
+        for ds in DATASETS:
+            print(f"  {ds} — conditions: {sorted(train[ds]['condition'].unique())}")
 
-    print("Scaling sensors per condition (MinMax, fit on train)...")
+    if verbose:
+        print("Scaling sensors per condition (MinMax, fit on train)...")
     sensor_cols = scale_sensors(train, test)
 
-    print("Computing train RUL labels...")
+    if verbose:
+        print("Computing train RUL labels...")
     train = add_train_rul(train)
+
+    return train, test, rul, sensor_cols
+
+
+def main():
+    train, test, rul, sensor_cols = build_processed_frames()
 
     print("Building sliding windows...")
     X_list, y_list, cond_list, unit_list, cycle_list, subset_list = [], [], [], [], [], []
