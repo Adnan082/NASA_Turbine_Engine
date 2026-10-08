@@ -1,5 +1,8 @@
 # TurbineAgent — NASA C-MAPSS Fleet Health Monitor
 
+> **Serving boundary:** the default application uses the v1 agents and serves precomputed results through FastAPI. The v2 metrics below describe separate evaluation experiments; v2 is not yet promoted into the default serving path. This is a portfolio system, not evidence of production deployment.
+
+
 > A multi-agent AI system for predictive maintenance of aircraft turbofan engines.
 
 ![Python](https://img.shields.io/badge/Python-3.11%2B-blue?style=flat-square&logo=python)
@@ -478,3 +481,4 @@ not a swap.
 ## License
 
 MIT License — see [LICENSE](LICENSE) for details.
+
